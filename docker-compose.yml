@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: gerencie-ai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./www:/usr/share/nginx/html
+      - certbot_certs:/etc/letsencrypt
+    networks:
+      - gerencieai_network  # Conecta-se à rede partilhada
+
+  certbot:
+    image: certbot/certbot
+    container_name: gerencie-ai-certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+    command: certonly --webroot -w /usr/share/nginx/html --email gustavobpaulus@gmail.com --agree-tos --no-eff-email -d gerencieai.com.br -d investimentos.gerencieai.com.br
+    networks:
+      - gerencieai_network
+
+volumes:
+  certbot_certs:
+
+networks:
+  gerencieai_network:
+    external: true # Declara que esta rede já existe
