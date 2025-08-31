@@ -15,6 +15,8 @@ services:
       - certbot_www:/var/www/certbot
     networks:
       - gerencieai_network
+    depends_on:
+      - certbot
 
   certbot:
     image: certbot/certbot
@@ -23,12 +25,13 @@ services:
     volumes:
       - certbot_certs:/etc/letsencrypt
       - certbot_www:/var/www/certbot
-    # ESTE COMANDO É A CORREÇÃO: Ele tenta obter os certificados e depois entra em modo de renovação automática.
+    # CORREÇÃO: Comando ajustado para aguardar o Nginx e executar corretamente
     entrypoint: >-
       /bin/sh -c "
-        certbot certonly --webroot -w /var/www/certbot --non-interactive --agree-tos -m seu-email@exemplo.com.br \
-          -d gerencieai.com.br -d investimentos.gerencieai.com.br && \
-        while :; do certbot renew; sleep 12h & wait $${!}; done;
+      echo 'Aguardando Nginx...' && sleep 10s &&
+      certbot certonly --webroot -w /var/www/certbot --non-interactive --agree-tos -m seu-email@exemplo.com.br \
+        -d gerencieai.com.br -d investimentos.gerencieai.com.br && \
+      while :; do certbot renew; sleep 12h & wait $${!}; done;
       "
 
 volumes:
