@@ -23,19 +23,20 @@ services:
     volumes:
       - certbot_certs:/etc/letsencrypt
       - certbot_www:/var/www/certbot
-    entrypoint: [
-      "sh", "-c",
-      "echo '⏳ Aguardando Nginx subir...' && sleep 15 &&
-       certbot certonly --webroot -w /var/www/certbot \
-         --non-interactive --agree-tos \
-         -m seu-email@exemplo.com.br \
-         -d gerencieai.com.br -d investimentos.gerencieai.com.br &&
-       echo '✅ Certificados emitidos com sucesso' &&
-       while :; do
-         certbot renew --webroot -w /var/www/certbot;
-         sleep 12h;
-       done"
-    ]
+    networks:
+      - gerencieai_network
+    entrypoint: >
+      sh -c "echo '⏳ Aguardando Nginx subir...' && sleep 15 &&
+      certbot certonly --webroot -w /var/www/certbot \
+        --non-interactive --agree-tos \
+        -m seu-email@exemplo.com.br \
+        -d gerencieai.com.br -d investimentos.gerencieai.com.br &&
+      echo '✅ Certificados emitidos com sucesso' &&
+      while :; do
+        certbot renew --webroot -w /var/www/certbot \
+          --deploy-hook 'docker exec gerencie-ai-nginx nginx -s reload';
+        sleep 12h;
+      done"
 
 volumes:
   certbot_certs:
